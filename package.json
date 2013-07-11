@@ -1,0 +1,32 @@
+{
+    "name": "protean",
+    "description": "An ever changing set of utilities.",
+    "version": "0.1.0",
+    "keywords": ["utility", "underscore", "etc..."],
+    "main": "./node_modules/protean/index.js",
+    "dependencies": {
+        "underscore":   "1.4.x"
+    },
+    "devDependencies": {
+        "mocha":    "1.7.x",
+        "should":   "1.2.x",
+        "sake":     "0.1.x",
+        "ejs":      "0.8.x"
+    },
+    "bundledDependencies": [
+        "protean"
+    ],
+    "licenses": [
+        {
+            "type": "MIT",
+            "url": "http://github.com/jhamlet/node-protean/raw/master/LICENSE"
+        }
+    ],
+    "repository": {
+        "type": "git",
+        "url": "http://github.com/jhamlet/node-protean.git"
+    },
+    "bugs": {
+        "url": "http://github.com/jhamlet/node-protean/issues"
+    }
+}
