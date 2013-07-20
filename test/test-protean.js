@@ -58,4 +58,51 @@ describe('Protean', function () {
         
     });
     
+    describe('.instantiate()', function () {
+        it(
+            'should create a new object from constructor function and passed arguments',
+            function () {
+                var obj;
+                
+                function Ctor (arg) {
+                    this.foo = arg;
+                }
+                
+                obj = utils.instantiate(Ctor, ['foo']);
+                obj.should.be.an.instanceof(Ctor);
+                obj.should.have.property('foo', 'foo');
+            }
+        );
+    });
+    
+    describe('.lazily()', function () {
+        var obj;
+        
+        beforeEach(function () {
+            obj = {};
+            
+            utils.lazily(obj, 'foo', function () {
+                return 'foo';
+            });
+        });
+        
+        it('should define a getter on the supplied object', function () {
+            Object.getOwnPropertyDescriptor(obj, 'foo').
+                should.have.property('get');
+            
+            Object.getOwnPropertyDescriptor(obj, 'foo').get.
+                should.be.a('function');
+        });
+
+        it('when accessed it should return the value', function () {
+            obj.foo.should.equal('foo');
+        });
+
+        it('after being accessed it should be a plain value', function () {
+            var f = obj.foo;
+            Object.getOwnPropertyDescriptor(obj, 'foo').
+                should.not.have.property('get');
+        });
+    });
+    
 });
