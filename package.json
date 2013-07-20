@@ -5,7 +5,8 @@
     "keywords": ["utility", "underscore", "etc..."],
     "main": "./node_modules/protean/index.js",
     "dependencies": {
-        "underscore":   "1.4.x"
+        "underscore":   "1.4.x",
+        "rx":           "2.1.x"
     },
     "devDependencies": {
         "mocha":    "1.7.x",
