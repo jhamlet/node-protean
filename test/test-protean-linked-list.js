@@ -48,6 +48,15 @@ describe('LinkedList.Item', function () {
             item.prev.prev.data.should.equal('prev');
         });
     });
+
+    describe.skip('#destroy()', function () {
+        
+    });
+
+});
+
+describe.skip('LinkedList.Cursor', function () {
+    
 });
 
 describe('Linked List', function () {
@@ -74,6 +83,22 @@ describe('Linked List', function () {
                 list.get(-3).should.equal('foo');
             }
         )
+    });
+    
+    describe.skip('#set()', function () {
+        
+    });
+    
+    describe.skip('#insert()', function () {
+        
+    });
+
+    describe.skip('#insertBefore()', function () {
+        
+    });
+
+    describe.skip('#remove()', function () {
+        
     });
     
     describe('#push()', function () {
@@ -272,4 +297,17 @@ describe('Linked List', function () {
             lastIdx.should.equal(2);
         });
     });
+    
+    describe.skip('#reduce()', function () {
+        
+    });
+    
+    describe.skip('#join()', function () {
+        
+    });
+    
+    describe.skip('#toArray()', function () {
+        
+    });
+    
 });
