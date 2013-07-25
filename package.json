@@ -1,7 +1,7 @@
 {
     "name": "protean",
     "description": "An ever changing set of utilities.",
-    "version": "0.1.3",
+    "version": "0.1.4",
     "keywords": ["utility", "underscore", "etc..."],
     "main": "./node_modules/protean/index.js",
     "dependencies": {
