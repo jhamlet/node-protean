@@ -58,13 +58,13 @@ describe('Protean', function () {
         
     });
     
-    describe('inherits', function () {
+    describe('classify', function () {
         
         it('should prototype link two functions', function () {
             function Foo () {};
             function Bar () {};
             
-            utils.inherits(Bar, Foo);
+            Bar = utils.classify(Foo);
             
             Object.getPrototypeOf(Bar.prototype).
                 should.equal(Foo.prototype);
@@ -78,7 +78,7 @@ describe('Protean', function () {
             
             function Foo () {};
             
-            Bar = utils.inherits(Foo);
+            Bar = utils.classify(Foo);
             
             Bar.should.be.a('function');
             Object.getPrototypeOf(Bar.prototype).
@@ -92,7 +92,7 @@ describe('Protean', function () {
             
             function Foo (arg) { this.foo = arg };
             
-            Bar = utils.inherits(Foo);
+            Bar = utils.classify(Foo);
             
             (new Bar('foo')).should.have.property('foo', 'foo');
         });
@@ -104,7 +104,7 @@ describe('Protean', function () {
             
                 function Foo () {};
             
-                Bar = utils.inherits(Foo);
+                Bar = utils.classify(Foo);
                 Bar._super.should.equal(Foo);
             }
         );
@@ -112,17 +112,17 @@ describe('Protean', function () {
         it(
             'instance#_super() method should call method from superclass',
             function () {
-                var Foo = utils.inherits(Object, {
+                var Foo = utils.classify(Object, {
                         foo: function () {
                             return 'foo';
                         }
                     }),
-                    Bar = utils.inherits(Foo, {
+                    Bar = utils.classify(Foo, {
                         foo: function () {
                             return this._super();
                         }
                     }),
-                    Baz = utils.inherits(Bar, {
+                    Baz = utils.classify(Bar, {
                         foo: function () {
                             return this._super();
                         }
@@ -136,17 +136,17 @@ describe('Protean', function () {
         it(
             'instance#_super() method should call method from superclass with original arguments',
             function () {
-                var Foo = utils.inherits(Object, {
+                var Foo = utils.classify(Object, {
                         foo: function (arg) {
                             return arg + '-foo';
                         }
                     }),
-                    Bar = utils.inherits(Foo, {
+                    Bar = utils.classify(Foo, {
                         foo: function (arg) {
                             return this._super();
                         }
                     }),
-                    Baz = utils.inherits(Bar, {
+                    Baz = utils.classify(Bar, {
                         foo: function (arg) {
                             return this._super();
                         }
@@ -160,17 +160,17 @@ describe('Protean', function () {
         it(
             'instance#_super() method should call method from superclass with passed arguments',
             function () {
-                var Foo = utils.inherits(Object, {
+                var Foo = utils.classify(Object, {
                         foo: function (arg) {
                             return arg + '-foo';
                         }
                     }),
-                    Bar = utils.inherits(Foo, {
+                    Bar = utils.classify(Foo, {
                         foo: function (arg) {
                             return this._super('baz');
                         }
                     }),
-                    Baz = utils.inherits(Bar, {
+                    Baz = utils.classify(Bar, {
                         foo: function (arg) {
                             return this._super();
                         }
@@ -180,6 +180,74 @@ describe('Protean', function () {
                 baz.foo('foo').should.equal('baz-foo');
             }
         );
+        
+        it(
+            'instance#_super does not interfere with instance properties',
+            function () {
+                var Bar, Baz, obj, other;
+                
+                function Foo (arg) { this.foo = arg; }
+                Foo.prototype = {
+                    method: function (arg) {
+                        return this.foo + (arg ? arg.toString() : '');
+                    }
+                };
+                
+                Bar = utils.classify(Foo, {
+                    method: function (arg) {
+                        var ret = this._super();
+                        ret += arg && arg.method ? arg.method() : '';
+                        return ret;
+                    }
+                });
+                
+                Baz = utils.classify(Bar, {
+                    method: function (arg) {
+                        return this._super();
+                    },
+                    toString: function () {
+                        return this.foo;
+                    }
+                });
+                
+                obj = new Baz('foo');
+                other = new Baz('fuz');
+                
+                obj.method('foo').should.equal('foofoo');
+                other.method('fuz').should.equal('fuzfuz');
+                obj.method(other).should.equal('foofuzfuz');
+            }
+        );
+        
+        it('_super calls getters/setters', function () {
+            var Bar, obj;
+            
+            function Foo () { this.foo = 'foo'; };
+            Foo.prototype = {
+                get f () {
+                    return this.foo;
+                },
+                set f (v) {
+                    this.foo = v;
+                }
+            };
+            
+            Bar = utils.classify(Foo, null, {
+                f: {
+                    get: function () {
+                        return this._super();
+                    },
+                    set: function (v) {
+                        this._super();
+                    }
+                }
+            });
+            
+            obj = new Bar();
+            obj.f.should.equal('foo');
+            obj.f = 'baz';
+            obj.f.should.equal('baz');
+        });
     });
     
     describe('.instantiate()', function () {
