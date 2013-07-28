@@ -58,6 +58,130 @@ describe('Protean', function () {
         
     });
     
+    describe('inherits', function () {
+        
+        it('should prototype link two functions', function () {
+            function Foo () {};
+            function Bar () {};
+            
+            utils.inherits(Bar, Foo);
+            
+            Object.getPrototypeOf(Bar.prototype).
+                should.equal(Foo.prototype);
+            
+            (new Bar()).should.be.an.instanceof(Bar);
+            (new Bar()).should.be.an.instanceof(Foo);
+        });
+        
+        it('should return a function if not given one', function () {
+            var Bar;
+            
+            function Foo () {};
+            
+            Bar = utils.inherits(Foo);
+            
+            Bar.should.be.a('function');
+            Object.getPrototypeOf(Bar.prototype).
+                should.equal(Foo.prototype);
+            (new Bar()).should.be.an.instanceof(Bar);
+            (new Bar()).should.be.an.instanceof(Foo);
+        });
+
+        it('should automatically call superclass constructor', function () {
+            var Bar;
+            
+            function Foo (arg) { this.foo = arg };
+            
+            Bar = utils.inherits(Foo);
+            
+            (new Bar('foo')).should.have.property('foo', 'foo');
+        });
+
+        it(
+            'sublcass._super property should point to superclass.prototype',
+            function () {
+                var Bar;
+            
+                function Foo () {};
+            
+                Bar = utils.inherits(Foo);
+                Bar._super.should.equal(Foo);
+            }
+        );
+        
+        it(
+            'instance#_super() method should call method from superclass',
+            function () {
+                var Foo = utils.inherits(Object, {
+                        foo: function () {
+                            return 'foo';
+                        }
+                    }),
+                    Bar = utils.inherits(Foo, {
+                        foo: function () {
+                            return this._super();
+                        }
+                    }),
+                    Baz = utils.inherits(Bar, {
+                        foo: function () {
+                            return this._super();
+                        }
+                    }),
+                    baz = new Baz();
+                
+                baz.foo().should.equal('foo');
+            }
+        );
+
+        it(
+            'instance#_super() method should call method from superclass with original arguments',
+            function () {
+                var Foo = utils.inherits(Object, {
+                        foo: function (arg) {
+                            return arg + '-foo';
+                        }
+                    }),
+                    Bar = utils.inherits(Foo, {
+                        foo: function (arg) {
+                            return this._super();
+                        }
+                    }),
+                    Baz = utils.inherits(Bar, {
+                        foo: function (arg) {
+                            return this._super();
+                        }
+                    }),
+                    baz = new Baz();
+                
+                baz.foo('foo').should.equal('foo-foo');
+            }
+        );
+
+        it(
+            'instance#_super() method should call method from superclass with passed arguments',
+            function () {
+                var Foo = utils.inherits(Object, {
+                        foo: function (arg) {
+                            return arg + '-foo';
+                        }
+                    }),
+                    Bar = utils.inherits(Foo, {
+                        foo: function (arg) {
+                            return this._super('baz');
+                        }
+                    }),
+                    Baz = utils.inherits(Bar, {
+                        foo: function (arg) {
+                            return this._super();
+                        }
+                    }),
+                    baz = new Baz();
+                
+                baz.foo('foo').should.equal('baz-foo');
+            }
+        );
+    });
+    
     describe('.instantiate()', function () {
         it(
             'should create a new object from constructor function and passed arguments',
