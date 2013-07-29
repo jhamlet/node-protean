@@ -15,42 +15,52 @@ function benchmark (times, fn) {
 }
 
 describe('protean._super performance', function () {
-    var iterations = 10000;
+    var iterations = 20000,
+        a, b, c, d, e, f;
     
-    describe('directed function calls', function () {
-        
-        it('should be fast', function () {
-            var a = { foo: function () { return 'foo'; } },
-                b = Object.create(a, {
-                    foo: { value: function () {
-                        return a.foo.apply(this, arguments);
-                    } }
-                }),
-                c = Object.create(a, {
-                    foo: { value: function () {
-                        return b.foo.apply(this, arguments);
-                    } }
-                }),
-                d = Object.create(a, {
-                    foo: { value: function () {
-                        return c.foo.apply(this, arguments);
-                    } }
-                }),
-                e = Object.create(a, {
-                    foo: { value: function () {
-                        return d.foo.apply(this, arguments);
-                    } }
-                }),
-                f = Object.create(e);
-            
+    function createChain () {
+        a = { foo: function () { return 'foo'; } };
+        b = Object.create(a, {
+            foo: { value: function () {
+                return a.foo.apply(this, arguments);
+            } }
+        });
+        c = Object.create(a, {
+            foo: { value: function () {
+                return b.foo.apply(this, arguments);
+            } }
+        });
+        d = Object.create(a, {
+            foo: { value: function () {
+                return c.foo.apply(this, arguments);
+            } }
+        });
+        e = Object.create(a, {
+            foo: { value: function () {
+                return d.foo.apply(this, arguments);
+            } }
+        });
+        f = Object.create(e);
+    }
+    
+    describe('direct function calls', function () {
+        it('create and then call', function () {
+            createChain();
             console.log(benchmark(iterations, function () {
                 f.foo().should.equal('foo');
             }));
         });
-        
+
+        it.skip('create and call each time', function () {
+            console.log(benchmark(iterations, function () {
+                createChain();
+                f.foo().should.equal('foo');
+            }));
+        });
     });
     
-    describe('_super() bound between each function', function () {
+    describe('original _super() implementation', function () {
+        var a, b, c, d, e, f;
         
         function inherit (superobj, props) {
             var subobj = Object.create(superobj),
@@ -76,31 +86,41 @@ describe('protean._super performance', function () {
             return subobj;
         }
         
-        it('should be a little slower', function () {
-            var a = { foo: function () { return 'foo' } },
-                b = inherit(a, {
-                        foo: function () {
-                            return this._super();
-                        }
-                    }),
-                c = inherit(b, {
-                        foo: function () {
-                            return this._super();
-                        }
-                    }),
-                d = inherit(c, {
-                        foo: function () {
-                            return this._super();
-                        }
-                    }),
-                e = inherit(d, {
-                    foo: function () {
-                        return this._super();
-                    }
-                }),
-                f = Object.create(e);
-            
+        function createChain () {
+            a = { foo: function () { return 'foo' } };
+            b = inherit(a, {
+                foo: function () {
+                    return this._super();
+                }
+            });
+            c = inherit(b, {
+                foo: function () {
+                    return this._super();
+                }
+            });
+            d = inherit(c, {
+                foo: function () {
+                    return this._super();
+                }
+            });
+            e = inherit(d, {
+                foo: function () {
+                    return this._super();
+                }
+            });
+            f = Object.create(e);
+        }
+        
+        it('create and then call', function () {
+            createChain();
             console.log(benchmark(iterations, function () {
+                f.foo().should.equal('foo');
+            }));
+        });
+        
+        it.skip('create and call each time', function () {
+            console.log(benchmark(iterations, function () {
+                createChain();
                 f.foo().should.equal('foo');
             }));
         });
@@ -108,37 +128,48 @@ describe('protean._super performance', function () {
     });
     
     describe('protean._super()', function () {
+        var a, b, c, d, e, f;
         
-        it('should be slow, but not that slow...', function () {
-            var a = { foo: function () { return 'foo'; } },
-                b = Object.create(a, {
-                    foo: { value: function () {
-                        return this._super();
-                    } }
-                }),
-                c = Object.create(a, {
-                    foo: { value: function () {
-                        return this._super();
-                    } }
-                }),
-                d = Object.create(a, {
-                    foo: { value: function () {
-                        return this._super();
-                    } }
-                }),
-                e = Object.create(a, {
-                    foo: { value: function () {
-                        return this._super();
-                    } }
-                }),
-                f = Object.create(e);
+        function createChain () {
+            a = { foo: function () { return 'foo'; } };
+            b = Object.create(a, {
+                foo: { value: function () {
+                    return this._super();
+                } }
+            });
+            c = Object.create(a, {
+                foo: { value: function () {
+                    return this._super();
+                } }
+            });
+            d = Object.create(a, {
+                foo: { value: function () {
+                    return this._super();
+                } }
+            });
+            e = Object.create(a, {
+                foo: { value: function () {
+                    return this._super();
+                } }
+            });
+            f = Object.create(e);
             
             a._super = utils._super;
-            
+            // utils.linkSuperChain(f, 'foo');
+        }
+        
+        it('create and then call', function () {
+            createChain();
             console.log(benchmark(iterations, function () {
                 f.foo().should.equal('foo');
             }));
         });
         
+        it.skip('create and and call each time', function () {
+            console.log(benchmark(iterations, function () {
+                createChain();
+                f.foo().should.equal('foo');
+            }));
+        });
     });
 });

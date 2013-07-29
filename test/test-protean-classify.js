@@ -114,7 +114,7 @@ describe('protean', function () {
         });
     });
     
-    describe('.linkSupers(obj, key)', function () {
+    describe('.linkSuperChain(obj, key)', function () {
         it('should place \'_super\' properties on functions that point to the next function in the prototype chain', function () {
             var a = { foo: function () {} },
                 b = Object.create(a),
@@ -123,7 +123,7 @@ describe('protean', function () {
                 e = Object.create(d, { foo: { value: function () {} } }),
                 f = Object.create(e);
 
-            utils.linkSupers(f, 'foo');
+            utils.linkSuperChain(f, 'foo');
 
             e.foo._super.should.equal(c.foo);
             c.foo._super.should.equal(a.foo);
@@ -151,7 +151,7 @@ describe('protean', function () {
                 }),
                 f = Object.create(e);
             
-            utils.linkSupers(f, 'foo');
+            utils.linkSuperChain(f, 'foo');
             
             should.exist(e.__lookupGetter__('foo')._super);
             e.__lookupGetter__('foo')._super.should.equal(c.__lookupGetter__('foo'));
