@@ -4,146 +4,229 @@ var should = require('should'),
     utils = require('protean'),
     classify = utils.classify;
 
-describe('Protean', function () {
+describe('protean', function () {
+    var Foo;
     
-    describe('.getKeyOfCaller(obj, [caller])', function () {
-        it('should return the calling function\'s \'property\' name', function () {
-            var obj = {
-                    foo: function () {
-                        return utils.getKeyOfCaller(this);
-                    },
-                    bar: function () {
-                        return this.foo();
-                    }
-                };
-            
-            obj.bar().should.equal('bar');
-        });
+    before(function () {
+        Foo = classify({
+                init: function (arg) {
+                    this.foo = arg;
+                }
+            });
+    });
 
-        it('should not return the calling function\'s name', function () {
-            var obj = {
-                    foo: function () {
-                        return utils.getKeyOfCaller(this);
+    describe('.inherits(superclass, [subclass], [props], [properties])', function () {
+        it('should correctly inherit from superclass', function () {
+            var Bar = utils.inherits(Foo);
+            Bar._super.should.equal(Foo.prototype);
+            (new Bar()).should.be.an.instanceof(Foo);
+        });
+        
+        it('getters/setters should be preserved', function () {
+            var Bar = utils.inherits(Foo, {
+                    init: function (arg) {
+                        Bar._super.constructor.call(this, arg);
                     },
-                    bar: function doBar () {
-                        return this.foo();
+                    get bar () {
+                        return this.foo;
+                    },
+                    set bar (v) {
+                        this.foo = v;
                     }
-                };
+                }),
+                obj;
             
-            obj.bar().should.not.equal('doBar');
+            Bar.prototype.__lookupGetter__('bar').should.be.a('function');
+            Bar.prototype.__lookupSetter__('bar').should.be.a('function');
+            
+            obj = new Bar('bar');
+            obj.bar.should.equal('bar');
+            obj.bar = 'buz';
+            obj.foo.should.equal('buz');
         });
     });
     
-    describe('.getPrototypeChainFor(obj, key)', function () {
-        it('should return the correct object order', function () {
-            var a = { foo: 'foo' },
+    describe('.classify(props, [properties])', function () {
+        it('should return a constructor function', function () {
+            Foo.should.be.a('function');
+            (new Foo()).should.be.an.instanceof(Foo);
+        });
+        
+        it('should correctly call the constructor function', function () {
+            (new Foo('foo')).foo.should.equal('foo');
+        });
+        
+        it('should have an \'extend\' method', function () {
+            Foo.extend.should.be.a('function');
+        });
+
+        it(
+            'should have a \'_super\' property that points to the superclass\'s prototype',
+            function () {
+                Foo._super.should.equal(Object.prototype);
+            }
+        );
+        
+        it('extending a class should be an instance of the superclass', function () {
+            var Bar = Foo.extend({});
+            Bar._super.should.equal(Foo.prototype);
+            (new Bar()).should.be.an.instanceof(Bar);
+            (new Bar()).should.be.an.instanceof(Foo);
+        });
+    });
+    
+    describe('.getKeyForCaller(obj, [caller])', function () {
+        it('should return the calling functions object key', function () {
+            var obj = {
+                    foo: function () {
+                        return utils.getKeyForCaller(this);
+                    },
+                    bar: function () {
+                        return this.foo();
+                    },
+                    baz: function () {
+                        return utils.getKeyForCaller(this, this.baz.caller);
+                    },
+                    buz: function () {
+                        return this.baz();
+                    }
+                };
+
+            obj.bar().should.equal('bar');
+            obj.buz().should.equal('buz');
+        });
+    });
+    
+    describe('.getPrototypeChainForKey(obj, key)', function () {
+        it('should return an array objects with specified key', function () {
+            var a = { foo: function () {} },
                 b = Object.create(a),
-                c = Object.create(b, {foo: {value: 'bar'}}),
+                c = Object.create(b, { foo: { value: function () {} } }),
                 d = Object.create(c),
-                e = Object.create(d, {foo: {value: 'baz'}}),
-                chain = utils.getPrototypeChainFor(e, 'foo');
+                e = Object.create(d, { foo: { value: function () {} } }),
+                f = Object.create(e),
+                chain = utils.getPrototypeChainForKey(f, 'foo');
             
             chain.length.should.equal(3);
             chain[0].should.equal(e);
             chain[1].should.equal(c);
             chain[2].should.equal(a);
-            
-            chain.
-                map(function (obj) {
-                    return obj.foo;
-                }).
-                join(',').
-                should.equal('baz,bar,foo');
         });
     });
     
-    describe('classify', function () {
-        describe('.linkSupers(obj, name)', function () {
-            it('should correctly link super functions', function () {
-                var a = { foo: function () { return 'foo'; } },
-                    b = Object.create(a),
-                    c = Object.create(b, {
-                        foo: { value: function () {} }
-                    }),
-                    d = Object.create(c),
-                    e = Object.create(d, {
-                        foo: { value: function () {} }
-                    });
-                
-                classify.linkSupers(e, 'foo');
-                e.foo.__super__.should.equal(c.foo);
-                c.foo.__super__.should.equal(a.foo);
-            });
+    describe('.linkSupers(obj, key)', function () {
+        it('should place \'_super\' properties on functions that point to the next function in the prototype chain', function () {
+            var a = { foo: function () {} },
+                b = Object.create(a),
+                c = Object.create(b, { foo: { value: function () {} } }),
+                d = Object.create(c),
+                e = Object.create(d, { foo: { value: function () {} } }),
+                f = Object.create(e);
 
-            it('should correctly link super getter/setters', function () {
-                var a = { get foo () { return 'foo'; } },
-                    b = Object.create(a),
-                    c = Object.create(b, {
-                        foo: { get: function () {} }
-                    }),
-                    d = Object.create(c),
-                    e = Object.create(d, {
-                        foo: { get: function () {} }
-                    });
+            utils.linkSupers(f, 'foo');
 
-                classify.linkSupers(e, 'foo');
-                
-                e.__lookupGetter__('foo').__super__.
-                    should.equal(c.__lookupGetter__('foo'));
-
-                c.__lookupGetter__('foo').__super__.
-                    should.equal(a.__lookupGetter__('foo'));
-            });
+            e.foo._super.should.equal(c.foo);
+            c.foo._super.should.equal(a.foo);
+            should.not.exist(a.foo._super);
         });
         
-        describe('._super([...rest])', function () {
-            it('should correctly call super functions', function () {
-                var a = { foo: function () { return 'foo'; } },
-                    b = Object.create(a),
-                    c = Object.create(b, {
-                        foo: { value: function () { return this._super(); } }
-                    }),
-                    d = Object.create(c),
-                    e = Object.create(d, {
-                        foo: { value: function () { return this._super(); } }
-                    });
-                
-                a._super = classify._super;
-                a.foo().should.equal('foo');
-            });
-
-            it('should pass initial arguments', function () {
-                var a = { foo: function (arg) { return 'foo-' + (arg || ''); } },
-                    b = Object.create(a),
-                    c = Object.create(b, {
-                        foo: { value: function (arg) { return this._super(); } }
-                    }),
-                    d = Object.create(c),
-                    e = Object.create(d, {
-                        foo: { value: function (arg) { return this._super(); } }
-                    });
-                
-                a._super = classify._super;
-                a.foo().should.equal('foo-');
-                a.foo('bar').should.equal('foo-bar');
-            });
-
-            it('should override initial arguments if arguments provided', function () {
-                var a = { foo: function (arg) { return 'foo-' + (arg || ''); } },
-                    b = Object.create(a),
-                    c = Object.create(b, {
-                        foo: { value: function (arg) { return this._super('baz'); } }
-                    }),
-                    d = Object.create(c),
-                    e = Object.create(d, {
-                        foo: { value: function (arg) { return this._super(); } }
-                    });
-                
-                a._super = classify._super;
-                e.foo().should.equal('foo-baz');
-                e.foo('bar').should.equal('foo-baz');
-            });
+        it('should do the same for getters/setters', function () {
+            var a = {
+                    get foo () {},
+                    set foo () {}
+                },
+                b = Object.create(a),
+                c = Object.create(b, {
+                    foo: {
+                        get: function () {},
+                        set: function () {}
+                    }
+                }),
+                d = Object.create(c),
+                e = Object.create(d, {
+                    foo: {
+                        get: function () {},
+                        set: function () {}
+                    }
+                }),
+                f = Object.create(e);
+            
+            utils.linkSupers(f, 'foo');
+            
+            should.exist(e.__lookupGetter__('foo')._super);
+            e.__lookupGetter__('foo')._super.should.equal(c.__lookupGetter__('foo'));
+            should.exist(e.__lookupSetter__('foo')._super);
+            e.__lookupSetter__('foo')._super.should.equal(c.__lookupSetter__('foo'));
+            
+            should.exist(c.__lookupGetter__('foo')._super);
+            c.__lookupGetter__('foo')._super.should.equal(a.__lookupGetter__('foo'));
+            should.exist(c.__lookupSetter__('foo')._super);
+            c.__lookupSetter__('foo')._super.should.equal(a.__lookupSetter__('foo'));
         });
     });
     
+    describe('._super([...rest])', function () {
+        it('should call the next method in the prototype chain', function () {
+            var a = { foo: function () { return 'foo'; } },
+                b = Object.create(a),
+                c = Object.create(b, {
+                    foo: { value: function () {
+                        return this._super();
+                    } }
+                }),
+                d = Object.create(c),
+                e = Object.create(d, {
+                    foo: { value: function () {
+                        return this._super();
+                    } }
+                }),
+                f = Object.create(e);
+            
+            a._super = utils._super;
+            
+            f.foo().should.equal('foo');
+        });
+
+        it('should propagate initial arguments', function () {
+            var a = { foo: function (arg) { return 'foo-' + arg; } },
+                b = Object.create(a),
+                c = Object.create(b, {
+                    foo: { value: function (arg) {
+                        return this._super();
+                    } }
+                }),
+                d = Object.create(c),
+                e = Object.create(d, {
+                    foo: { value: function (arg) {
+                        return this._super();
+                    } }
+                }),
+                f = Object.create(e);
+            
+            a._super = utils._super;
+            
+            f.foo('foo').should.equal('foo-foo');
+        });
+
+        it('if arguments are given they should override initial arguments', function () {
+            var a = { foo: function (arg) { return 'foo-' + arg; } },
+                b = Object.create(a),
+                c = Object.create(b, {
+                    foo: { value: function (arg) {
+                        return this._super('bar');
+                    } }
+                }),
+                d = Object.create(c),
+                e = Object.create(d, {
+                    foo: { value: function (arg) {
+                        return this._super();
+                    } }
+                }),
+                f = Object.create(e);
+            
+            a._super = utils._super;
+            
+            f.foo('foo').should.equal('foo-bar');
+        });
+    });
 });

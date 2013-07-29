@@ -5,7 +5,7 @@ var should = require('should'),
     LinkedList = utils.LinkedList,
     ListItem = LinkedList.Item;
 
-describe('LinkedList.Item', function () {
+describe('protean.LinkedList.Item', function () {
     var item;
     
     beforeEach(function () {
@@ -55,11 +55,11 @@ describe('LinkedList.Item', function () {
 
 });
 
-describe.skip('LinkedList.Cursor', function () {
+describe.skip('protean.LinkedList.Cursor', function () {
     
 });
 
-describe('Linked List', function () {
+describe('protean.LinkedList', function () {
     var list;
     
     beforeEach(function () {
