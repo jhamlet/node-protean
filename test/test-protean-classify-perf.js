@@ -54,22 +54,22 @@ describe('Protean - classify - performance', function () {
         var a = { foo: function () { return 'foo'; }},
             b = Object.create(a, {
                     foo: { value: function () {
-                        return this._super();
+                        return b.foo._super.apply(this);
                     }}
                 }),
             c = Object.create(b, {
                     foo: { value: function () {
-                        return this._super();
+                        return c.foo._super.apply(this);
                     }}
                 }),
             d = Object.create(c, {
                     foo: { value: function () {
-                        return this._super();
+                        return d.foo._super.apply(this);
                     } }
                 }),
             e = Object.create(d, {
                     foo: { value: function () {
-                        return this._super();
+                        return e.foo._super.apply(this);
                     } }
                 }),
             f = Object.create(e);
@@ -78,7 +78,7 @@ describe('Protean - classify - performance', function () {
         
         it('should be slower', function () {
             var result;
-            f.foo();
+            classify.linkSupers(f, 'foo');
             result = benchmark(times, function () {
                 f.foo();
             });
