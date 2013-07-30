@@ -18,14 +18,14 @@ describe('protean', function () {
     describe('.inherit(superclass, [subclass], [props], [properties])', function () {
         it('should correctly inherit from superclass', function () {
             var Bar = utils.inherit(Foo);
-            Bar._proto.should.equal(Foo.prototype);
+            Bar.superproto.should.equal(Foo.prototype);
             (new Bar()).should.be.an.instanceof(Foo);
         });
         
         it('getters/setters should be preserved', function () {
             var Bar = utils.inherit(Foo, {
                     constructor: function (arg) {
-                        Bar._super.call(this, arg);
+                        Bar.superclass.call(this, arg);
                     },
                     get bar () {
                         return this.foo;
@@ -79,15 +79,15 @@ describe('protean', function () {
         });
 
         it(
-            'should have a \'_proto\' property that points to the superclass\'s prototype',
+            'should have a \'superproto\' property that points to the superclass\'s prototype',
             function () {
-                Foo._proto.should.equal(Object.prototype);
+                Foo.superproto.should.equal(Object.prototype);
             }
         );
         
         it('extending a class should be an instance of the superclass', function () {
             var Bar = Foo.extend({});
-            Bar._proto.should.equal(Foo.prototype);
+            Bar.superproto.should.equal(Foo.prototype);
             (new Bar()).should.be.an.instanceof(Bar);
             (new Bar()).should.be.an.instanceof(Foo);
         });
@@ -203,21 +203,18 @@ describe('protean', function () {
                 b = Object.create(a),
                 c = Object.create(b, {
                     foo: { value: function () {
-                        // c
                         return this._super();
                     } }
                 }),
                 d = Object.create(c),
                 e = Object.create(d, {
                     foo: { value: function () {
-                        // d
                         return this._super();
                     } }
                 }),
                 f = Object.create(e);
             
             a._super = utils._super;
-            // Object.defineProperty(a, '_super', { get: utils.getSuper });
             
             f.foo().should.equal('foo');
         });
@@ -239,7 +236,6 @@ describe('protean', function () {
                 f = Object.create(e);
             
             a._super = utils._super;
-            // Object.defineProperty(a, '_super', { get: utils.getSuper });
             
             f.foo('foo').should.equal('foo-foo');
         });
@@ -249,21 +245,18 @@ describe('protean', function () {
                 b = Object.create(a),
                 c = Object.create(b, {
                     foo: { value: function (arg) {
-                        // c
                         return this._super('bar');
                     } }
                 }),
                 d = Object.create(c),
                 e = Object.create(d, {
                     foo: { value: function (arg) {
-                        // d
                         return this._super();
                     } }
                 }),
                 f = Object.create(e);
             
             a._super = utils._super;
-            // Object.defineProperty(a, '_super', { get: utils.getSuper });
             
             f.foo('foo').should.equal('foo-bar');
         });

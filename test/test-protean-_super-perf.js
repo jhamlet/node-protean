@@ -50,13 +50,6 @@ describe('protean._super performance', function () {
                 f.foo().should.equal('foo');
             }));
         });
-
-        it.skip('create and call each time', function () {
-            console.log(benchmark(iterations, function () {
-                createChain();
-                f.foo().should.equal('foo');
-            }));
-        });
     });
     
     describe('original _super() implementation', function () {
@@ -117,14 +110,6 @@ describe('protean._super performance', function () {
                 f.foo().should.equal('foo');
             }));
         });
-        
-        it.skip('create and call each time', function () {
-            console.log(benchmark(iterations, function () {
-                createChain();
-                f.foo().should.equal('foo');
-            }));
-        });
-        
     });
     
     describe('protean._super()', function () {
@@ -163,11 +148,96 @@ describe('protean._super performance', function () {
                 f.foo().should.equal('foo');
             }));
         });
+    });
+    
+    describe('protean class chain -- _super', function () {
+        var instance;
         
-        it.skip('create and and call each time', function () {
+        before(function () {
+            var a = utils.classify({
+                    constructor: function (arg) {
+                        this._foo = arg;
+                    },
+                    foo: function () {
+                        return this._foo;
+                    }
+                }),
+                b = a.extend({
+                    foo: function () {
+                        return this._super();
+                    }
+                }),
+                c = b.extend({
+                    constructor: function () {
+                        this._super('bar');
+                    },
+                    foo: function () {
+                        return this._super();
+                    }
+                }),
+                d = c.extend({
+                    foo: function () {
+                        return this._super();
+                    }
+                }),
+                e = d.extend({
+                    foo: function () {
+                        return this._super();
+                    }
+                });
+                
+            instance = new e();
+        });
+        
+        it('should take some time', function () {
             console.log(benchmark(iterations, function () {
-                createChain();
-                f.foo().should.equal('foo');
+                instance.foo().should.equal('bar');
+            }));
+        });
+    });
+
+    describe('protean class chain -- Class.superproto.method.apply()', function () {
+        var instance;
+        
+        before(function () {
+            var a = utils.classify({
+                    constructor: function (arg) {
+                        this._foo = arg;
+                    },
+                    foo: function () {
+                        return this._foo;
+                    }
+                }),
+                b = a.extend({
+                    foo: function () {
+                        return b.superproto.foo.apply(this);
+                    }
+                }),
+                c = b.extend({
+                    constructor: function () {
+                        return c.superclass.apply(this, ['bar']);
+                    },
+                    foo: function () {
+                        return c.superproto.foo.apply(this);
+                    }
+                }),
+                d = c.extend({
+                    foo: function () {
+                        return d.superproto.foo.apply(this);
+                    }
+                }),
+                e = d.extend({
+                    foo: function () {
+                        return e.superproto.foo.apply(this);
+                    }
+                });
+                
+            instance = new e();
+        });
+        
+        it('should take some time', function () {
+            console.log(benchmark(iterations, function () {
+                instance.foo().should.equal('bar');
             }));
         });
     });
