@@ -147,7 +147,7 @@ describe('protean', function () {
     });
     
     describe('.linkSuperChain(obj, key)', function () {
-        it('should place \'_proto\' properties on functions that point to the next function in the prototype chain', function () {
+        it('should place \'_super\' properties on functions that point to the next function in the prototype chain', function () {
             var a = { foo: function () {} },
                 b = Object.create(a),
                 c = Object.create(b, { foo: { value: function () {} } }),
