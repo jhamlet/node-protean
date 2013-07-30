@@ -9,7 +9,7 @@ describe('protean', function () {
     
     before(function () {
         Foo = classify({
-                init: function (arg) {
+                constructor: function (arg) {
                     this.foo = arg;
                 }
             });
@@ -18,14 +18,14 @@ describe('protean', function () {
     describe('.inherit(superclass, [subclass], [props], [properties])', function () {
         it('should correctly inherit from superclass', function () {
             var Bar = utils.inherit(Foo);
-            Bar._super.should.equal(Foo.prototype);
+            Bar._proto.should.equal(Foo.prototype);
             (new Bar()).should.be.an.instanceof(Foo);
         });
         
         it('getters/setters should be preserved', function () {
             var Bar = utils.inherit(Foo, {
-                    init: function (arg) {
-                        Bar._super.constructor.call(this, arg);
+                    constructor: function (arg) {
+                        Bar._super.call(this, arg);
                     },
                     get bar () {
                         return this.foo;
@@ -44,6 +44,24 @@ describe('protean', function () {
             obj.bar = 'buz';
             obj.foo.should.equal('buz');
         });
+        
+        it('should extend non-protean classes', function () {
+            var EM = require('events').EventEmitter,
+                Foo, obj;
+            
+            Foo = utils.inherit(EM, {
+                constructor: function Foo () {
+                    this._super();
+                }
+            });
+            
+            obj = new Foo();
+            
+            obj.should.be.an.instanceof(EM);
+            obj.should.have.property('domain', null);
+            obj.should.have.property('_events');
+            obj.should.have.property('_maxListeners', 10);
+        });
     });
     
     describe('.classify(props, [properties])', function () {
@@ -61,15 +79,15 @@ describe('protean', function () {
         });
 
         it(
-            'should have a \'_super\' property that points to the superclass\'s prototype',
+            'should have a \'_proto\' property that points to the superclass\'s prototype',
             function () {
-                Foo._super.should.equal(Object.prototype);
+                Foo._proto.should.equal(Object.prototype);
             }
         );
         
         it('extending a class should be an instance of the superclass', function () {
             var Bar = Foo.extend({});
-            Bar._super.should.equal(Foo.prototype);
+            Bar._proto.should.equal(Foo.prototype);
             (new Bar()).should.be.an.instanceof(Bar);
             (new Bar()).should.be.an.instanceof(Foo);
         });
@@ -129,7 +147,7 @@ describe('protean', function () {
     });
     
     describe('.linkSuperChain(obj, key)', function () {
-        it('should place \'_super\' properties on functions that point to the next function in the prototype chain', function () {
+        it('should place \'_proto\' properties on functions that point to the next function in the prototype chain', function () {
             var a = { foo: function () {} },
                 b = Object.create(a),
                 c = Object.create(b, { foo: { value: function () {} } }),
