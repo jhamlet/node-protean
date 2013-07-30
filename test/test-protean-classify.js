@@ -165,7 +165,7 @@ describe('protean', function () {
         it('should do the same for getters/setters', function () {
             var a = {
                     get foo () {},
-                    set foo () {}
+                    set foo (v) {}
                 },
                 b = Object.create(a),
                 c = Object.create(b, {
