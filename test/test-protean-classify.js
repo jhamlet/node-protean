@@ -216,12 +216,13 @@ describe('protean', function () {
                 }),
                 f = Object.create(e);
             
-            Object.defineProperty(a, '_super', { get: utils.getSuper });
+            a._super = utils._super;
+            // Object.defineProperty(a, '_super', { get: utils.getSuper });
             
             f.foo().should.equal('foo');
         });
 
-        it.skip('should propagate initial arguments', function () {
+        it('should propagate initial arguments', function () {
             var a = { foo: function (arg) { return 'foo-' + arg; } },
                 b = Object.create(a),
                 c = Object.create(b, {
@@ -237,7 +238,8 @@ describe('protean', function () {
                 }),
                 f = Object.create(e);
             
-            Object.defineProperty(a, '_super', { get: utils.getSuper });
+            a._super = utils._super;
+            // Object.defineProperty(a, '_super', { get: utils.getSuper });
             
             f.foo('foo').should.equal('foo-foo');
         });
@@ -260,7 +262,8 @@ describe('protean', function () {
                 }),
                 f = Object.create(e);
             
-            Object.defineProperty(a, '_super', { get: utils.getSuper });
+            a._super = utils._super;
+            // Object.defineProperty(a, '_super', { get: utils.getSuper });
             
             f.foo('foo').should.equal('foo-bar');
         });

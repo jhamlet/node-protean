@@ -154,8 +154,7 @@ describe('protean._super performance', function () {
             });
             f = Object.create(e);
             
-            Object.defineProperty(a, '_super', { get: utils.getSuper });
-            // utils.linkSuperChain(f, 'foo');
+            a._super = utils._super;
         }
         
         it('create and then call', function () {
