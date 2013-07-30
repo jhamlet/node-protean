@@ -15,15 +15,15 @@ describe('protean', function () {
             });
     });
 
-    describe('.inherits(superclass, [subclass], [props], [properties])', function () {
+    describe('.inherit(superclass, [subclass], [props], [properties])', function () {
         it('should correctly inherit from superclass', function () {
-            var Bar = utils.inherits(Foo);
+            var Bar = utils.inherit(Foo);
             Bar._super.should.equal(Foo.prototype);
             (new Bar()).should.be.an.instanceof(Foo);
         });
         
         it('getters/setters should be preserved', function () {
-            var Bar = utils.inherits(Foo, {
+            var Bar = utils.inherit(Foo, {
                     init: function (arg) {
                         Bar._super.constructor.call(this, arg);
                     },
@@ -77,7 +77,7 @@ describe('protean', function () {
     
     describe('.getKeyForCaller(obj, [caller])', function () {
         it('should return the calling functions object key', function () {
-            var obj = {
+            var obj = Object.create({
                     foo: function () {
                         return utils.getKeyForCaller(this);
                     },
@@ -90,10 +90,24 @@ describe('protean', function () {
                     buz: function () {
                         return this.baz();
                     }
-                };
+                });
 
             obj.bar().should.equal('bar');
             obj.buz().should.equal('buz');
+        });
+        
+        it('should correctly get a bound function key', function () {
+            var obj = Object.create({
+                    foo: function () {
+                        return utils.getKeyForCaller(this);
+                    },
+                    bar: function () {
+                        return this.foo();
+                    }
+                });
+                
+            obj.bar = obj.bar.bind(obj);
+            obj.bar().should.equal('bar');
         });
     });
     

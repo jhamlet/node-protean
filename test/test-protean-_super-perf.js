@@ -15,7 +15,7 @@ function benchmark (times, fn) {
 }
 
 describe('protean._super performance', function () {
-    var iterations = 20000,
+    var iterations = 10000,
         a, b, c, d, e, f;
     
     function createChain () {
