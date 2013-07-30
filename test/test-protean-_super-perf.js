@@ -173,3 +173,40 @@ describe('protean._super performance', function () {
         });
     });
 });
+
+describe('getPrototypeChainForKey(obj, key)', function () {
+    var iterations = 10000,
+        a, b, c, d, e, f;
+    
+    function createChain () {
+        a = { foo: function () { return 'foo'; } };
+        b = Object.create(a, {
+            foo: { value: function () {
+                return a.foo.apply(this, arguments);
+            } }
+        });
+        c = Object.create(a, {
+            foo: { value: function () {
+                return b.foo.apply(this, arguments);
+            } }
+        });
+        d = Object.create(a, {
+            foo: { value: function () {
+                return c.foo.apply(this, arguments);
+            } }
+        });
+        e = Object.create(a, {
+            foo: { value: function () {
+                return d.foo.apply(this, arguments);
+            } }
+        });
+        f = Object.create(e);
+    }
+    
+    it('should be fast...', function () {
+        createChain();
+        console.log(benchmark(iterations, function () {
+            utils.getPrototypeChainForKey(f, 'foo');
+        }));
+    });
+});
