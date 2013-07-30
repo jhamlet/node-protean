@@ -165,7 +165,7 @@ describe('protean', function () {
         it('should do the same for getters/setters', function () {
             var a = {
                     get foo () {},
-                    set foo () {}
+                    set foo (v) {}
                 },
                 b = Object.create(a),
                 c = Object.create(b, {
@@ -217,6 +217,15 @@ describe('protean', function () {
             a._super = utils._super;
             
             f.foo().should.equal('foo');
+        });
+
+        it('should return undefined if no super', function () {
+            var a = { foo: function () { return this._super(); } },
+                b = Object.create(a);
+            
+            a._super = utils._super;
+            
+            should.not.exist(b.foo());
         });
 
         it('should propagate initial arguments', function () {
